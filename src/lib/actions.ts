@@ -101,5 +101,11 @@ export async function addLabelToFeedback(prevState: any, formData: FormData) {
         return { message: 'Invalid label.' };
     }
     
-    return { message: `Added label "${validatedFields.data.label}"` };
+    const { label, feedbackId } = validatedFields.data;
+
+    // In a real app, you would update the feedback item in your database.
+    
+    revalidatePath(`/project/`);
+
+    return { message: `Added label "${label}"` };
 }

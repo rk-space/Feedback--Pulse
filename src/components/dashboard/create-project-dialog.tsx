@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,55 +25,48 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
 import { projectSchema } from '@/lib/schemas';
-import { createProject } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/app-provider';
 import type { Project } from '@/lib/definitions';
-
-type CreateProjectState = {
-  message: string;
-  errors?: { name?: string[] } | null;
-  project?: Project;
-  resetKey?: string;
-};
-
-const initialState: CreateProjectState = {
-  message: '',
-  errors: null,
-};
+import { createProject } from '@/lib/actions';
 
 export function CreateProjectDialog() {
-  const [state, formAction] = useActionState(createProject, initialState);
-  const [open, setOpen] = useState(false);
-  const { toast } = useToast();
-  const formRef = useRef<HTMLFormElement>(null);
-  
   const { addProject } = useAppContext();
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
 
   const form = useForm<z.infer<typeof projectSchema>>({
     resolver: zodResolver(projectSchema),
     defaultValues: { name: '' },
   });
-  
-  useEffect(() => {
-    if (state.message) {
-      if (state.errors) {
-        toast({
-          title: 'Error',
-          description: state.message,
-          variant: 'destructive',
-        });
-      } else if (state.project) {
-        toast({ title: 'Success', description: state.message });
-        setOpen(false);
-        form.reset();
-      }
-    }
-  }, [state, toast, form]);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
+        form.reset();
+    }
+  };
+
+  const onSubmit = async (values: z.infer<typeof projectSchema>) => {
+    const formData = new FormData();
+    formData.append('name', values.name);
+    
+    // In a real app, you'd get this from your auth state
+    const result = await createProject(null, formData);
+
+    if (result.errors) {
+        toast({
+            title: 'Error',
+            description: result.message,
+            variant: 'destructive',
+        });
+        if (result.errors.name) {
+            form.setError('name', { type: 'server', message: result.errors.name[0] });
+        }
+    } else if (result.project) {
+        toast({ title: 'Success', description: result.message });
+        addProject(result.project);
+        setOpen(false);
         form.reset();
     }
   };
@@ -95,8 +88,7 @@ export function CreateProjectDialog() {
         </DialogHeader>
         <Form {...form}>
           <form
-            ref={formRef}
-            action={formAction}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-4"
           >
             <FormField
@@ -112,14 +104,9 @@ export function CreateProjectDialog() {
                 </FormItem>
               )}
             />
-            {state.errors?.name && (
-              <p className="text-sm font-medium text-destructive">
-                {state.errors.name[0]}
-              </p>
-            )}
              <DialogFooter>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                    Create Project
+                    {form.formState.isSubmitting ? 'Creating...' : 'Create Project'}
                 </Button>
             </DialogFooter>
           </form>

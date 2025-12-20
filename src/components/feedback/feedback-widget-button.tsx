@@ -39,7 +39,6 @@ type SubmitFeedbackState = {
         projectId?: string[];
     } | null;
     feedback?: Feedback;
-    resetKey?: string;
 };
 
 const initialState: SubmitFeedbackState = {
@@ -82,6 +81,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
     setOpen(isOpen);
     if (!isOpen) {
       form.reset();
+      // Reset action state if dialog is closed
     }
   };
 
@@ -112,7 +112,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
                     })(evt);
                 }}
             >
-                <input type="hidden" {...form.register('projectId')} />
+                <input type="hidden" {...form.register('projectId')} value={projectId} />
                 <FormField
                     control={form.control}
                     name="type"
