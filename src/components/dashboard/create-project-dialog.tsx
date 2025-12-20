@@ -1,8 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -28,14 +27,21 @@ import { Plus } from 'lucide-react';
 import { projectSchema } from '@/lib/schemas';
 import { createProject } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
+import type { Project } from '@/lib/definitions';
 
-const initialState = {
-  message: '',
-  errors: {},
-  resetKey: '',
+type CreateProjectState = {
+  message: string;
+  errors: { name?: string[] } | null;
+  project?: Project;
+  resetKey?: string;
 };
 
-export function CreateProjectDialog() {
+const initialState: CreateProjectState = {
+  message: '',
+  errors: null,
+};
+
+export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (project: Project) => void }) {
   const [state, formAction] = useActionState(createProject, initialState);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -47,18 +53,21 @@ export function CreateProjectDialog() {
   });
 
   useEffect(() => {
-    if (state.message && !state.errors) {
-      toast({ title: 'Success', description: state.message });
-      setOpen(false);
-      form.reset();
-    } else if (state.message && state.errors) {
-      toast({
-        title: 'Error',
-        description: state.message,
-        variant: 'destructive',
-      });
+    if (state.resetKey) {
+        if (state.message && !state.errors && state.project) {
+            toast({ title: 'Success', description: state.message });
+            onProjectCreated(state.project);
+            setOpen(false);
+            form.reset();
+        } else if (state.message && state.errors) {
+            toast({
+                title: 'Error',
+                description: state.message,
+                variant: 'destructive',
+            });
+        }
     }
-  }, [state, toast, form]);
+  }, [state, toast, form, onProjectCreated]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

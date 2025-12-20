@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { analyzeFeedbackSentiment } from '@/ai/flows/analyze-feedback-sentiment';
 import { projectSchema, feedbackSchema, labelSchema } from '@/lib/schemas';
 import { projects, feedback } from '@/lib/data';
+import type { Project } from './definitions';
 
 export async function createProject(prevState: any, formData: FormData) {
   const validatedFields = projectSchema.safeParse({
@@ -19,19 +20,22 @@ export async function createProject(prevState: any, formData: FormData) {
   }
 
   const { name } = validatedFields.data;
-  const newProject = {
+  const newProject: Project = {
     id: `proj_${Date.now()}`,
     name,
     createdAt: new Date(),
     projectKey: `pk_${crypto.randomUUID()}`,
   };
 
+  // Note: In a real app, this would be a database call.
+  // For this mock data, we're returning the project to be added on the client.
   projects.unshift(newProject);
   revalidatePath('/dashboard');
 
   return {
     message: `Project "${name}" created successfully.`,
-    errors: {},
+    errors: null,
+    project: newProject,
     resetKey: Date.now().toString(),
   };
 }
