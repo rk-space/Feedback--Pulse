@@ -70,7 +70,12 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
   }, [state, toast, form, onProjectCreated]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+            form.reset();
+        }
+    }}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="-ml-1 mr-2 h-4 w-4" />
