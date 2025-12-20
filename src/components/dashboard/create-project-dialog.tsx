@@ -46,6 +46,7 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const lastResetKey = useRef<string | undefined>(undefined);
 
   const form = useForm<z.infer<typeof projectSchema>>({
     resolver: zodResolver(projectSchema),
@@ -53,7 +54,8 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
   });
   
   useEffect(() => {
-    if (state.message && state.resetKey) {
+    if (state.resetKey && state.resetKey !== lastResetKey.current) {
+        lastResetKey.current = state.resetKey;
         if (state.errors) {
             toast({
                 title: 'Error',
