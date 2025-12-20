@@ -65,12 +65,11 @@ export function CreateProjectDialog() {
         });
       } else if (state.project) {
         toast({ title: 'Success', description: state.message });
-        addProject(state.project);
         setOpen(false);
         form.reset();
       }
     }
-  }, [state, toast, form, addProject]);
+  }, [state, toast, form]);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
