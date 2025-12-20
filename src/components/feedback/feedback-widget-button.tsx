@@ -82,7 +82,6 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
             <form 
                 ref={formRef}
                 action={formAction}
-                onSubmit={form.handleSubmit(() => formRef.current?.requestSubmit())}
                 className="space-y-4"
             >
                 <input type="hidden" name="projectId" value={projectId} />
