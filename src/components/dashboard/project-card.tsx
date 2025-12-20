@@ -11,20 +11,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { EmbedSnippet } from '@/components/dashboard/embed-snippet';
 import type { Project } from '@/lib/definitions';
-import { feedback } from '@/lib/data';
+import { useAppContext } from '@/context/app-provider';
 
 export function ProjectCard({ project }: { project: Project }) {
+  const { feedback } = useAppContext();
   const feedbackCount = feedback.filter(f => f.projectId === project.id).length;
-  // A project is considered "new" if it was created just now and doesn't exist in the original hardcoded data.
-  // We can check this by seeing if its creation date doesn't match the predefined ones.
-  const isNew = !['2023-10-26T10:00:00.000Z', '2023-11-15T14:30:00.000Z'].includes(project.createdAt.toISOString());
-
-  const projectData = {
-    id: project.id,
-    name: project.name,
-    createdAt: project.createdAt.toISOString(),
-    projectKey: project.projectKey,
-  };
 
   return (
     <Card>
@@ -42,12 +33,7 @@ export function ProjectCard({ project }: { project: Project }) {
       </CardContent>
       <CardFooter>
         <Button asChild className="w-full">
-          <Link 
-            href={{
-              pathname: `/project/${project.id}`,
-              query: isNew ? { project: JSON.stringify(projectData) } : {},
-            }}
-          >
+          <Link href={`/project/${project.id}`}>
             View Feedback
           </Link>
         </Button>

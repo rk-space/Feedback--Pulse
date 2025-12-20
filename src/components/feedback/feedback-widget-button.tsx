@@ -29,6 +29,7 @@ import { feedbackSchema } from '@/lib/schemas';
 import { submitFeedback } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import type { Feedback } from '@/lib/definitions';
+import { useAppContext } from '@/context/app-provider';
 
 type SubmitFeedbackState = {
     message: string;
@@ -46,21 +47,14 @@ const initialState: SubmitFeedbackState = {
     errors: null,
 };
 
-export function FeedbackWidgetButton({ 
-    projectId, 
-    onFeedbackSubmitted,
-    projectData 
-}: { 
-    projectId: string, 
-    onFeedbackSubmitted?: (feedback: Feedback) => void,
-    projectData?: string 
-}) {
+export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
   const [state, formAction] = useActionState(submitFeedback, initialState);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const lastResetKey = useRef<string | undefined>(undefined);
   
+  const { addFeedback } = useAppContext();
+
   const form = useForm<z.infer<typeof feedbackSchema>>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
@@ -71,20 +65,17 @@ export function FeedbackWidgetButton({
   });
 
   useEffect(() => {
-    if (state.resetKey && state.resetKey !== lastResetKey.current) {
-        lastResetKey.current = state.resetKey;
-        if (state.errors) {
-            toast({ title: 'Error', description: state.message, variant: 'destructive' });
-        } else {
-            toast({ title: 'Success', description: state.message });
-            if (state.feedback && onFeedbackSubmitted) {
-                onFeedbackSubmitted(state.feedback);
-            }
-            setOpen(false);
-            form.reset();
-        }
+    if (state.message) {
+      if (state.errors) {
+        toast({ title: 'Error', description: state.message, variant: 'destructive' });
+      } else if (state.feedback) {
+        toast({ title: 'Success', description: state.message });
+        addFeedback(state.feedback);
+        setOpen(false);
+        form.reset();
+      }
     }
-  }, [state, toast, form, onFeedbackSubmitted]);
+  }, [state, toast, form, addFeedback]);
 
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -114,9 +105,14 @@ export function FeedbackWidgetButton({
                 ref={formRef}
                 action={formAction}
                 className="space-y-4"
+                onSubmit={(evt) => {
+                    evt.preventDefault();
+                    form.handleSubmit(() => {
+                        formAction(new FormData(formRef.current!));
+                    })(evt);
+                }}
             >
-                <input type="hidden" name="projectId" value={projectId} />
-                {projectData && <input type="hidden" name="projectData" value={projectData} />}
+                <input type="hidden" {...form.register('projectId')} />
                 <FormField
                     control={form.control}
                     name="type"

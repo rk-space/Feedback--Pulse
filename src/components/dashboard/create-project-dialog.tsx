@@ -27,6 +27,7 @@ import { Plus } from 'lucide-react';
 import { projectSchema } from '@/lib/schemas';
 import { createProject } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
+import { useAppContext } from '@/context/app-provider';
 import type { Project } from '@/lib/definitions';
 
 type CreateProjectState = {
@@ -41,12 +42,13 @@ const initialState: CreateProjectState = {
   errors: null,
 };
 
-export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (project: Project) => void }) {
+export function CreateProjectDialog() {
   const [state, formAction] = useActionState(createProject, initialState);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const lastResetKey = useRef<string | undefined>(undefined);
+  
+  const { addProject } = useAppContext();
 
   const form = useForm<z.infer<typeof projectSchema>>({
     resolver: zodResolver(projectSchema),
@@ -54,22 +56,21 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
   });
   
   useEffect(() => {
-    if (state.resetKey && state.resetKey !== lastResetKey.current) {
-        lastResetKey.current = state.resetKey;
-        if (state.errors) {
-            toast({
-                title: 'Error',
-                description: state.message,
-                variant: 'destructive',
-            });
-        } else if (state.project) {
-            toast({ title: 'Success', description: state.message });
-            onProjectCreated(state.project);
-            setOpen(false);
-            form.reset();
-        }
+    if (state.message) {
+      if (state.errors) {
+        toast({
+          title: 'Error',
+          description: state.message,
+          variant: 'destructive',
+        });
+      } else if (state.project) {
+        toast({ title: 'Success', description: state.message });
+        addProject(state.project);
+        setOpen(false);
+        form.reset();
+      }
     }
-  }, [state, toast, form, onProjectCreated]);
+  }, [state, toast, form, addProject]);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);

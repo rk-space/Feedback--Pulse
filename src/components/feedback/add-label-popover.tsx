@@ -24,7 +24,7 @@ import { addLabelToFeedback } from '@/lib/actions';
 
 const initialState = { message: '' };
 
-export function AddLabelPopover({ feedbackId }: { feedbackId: string }) {
+export function AddLabelPopover({ feedbackId, onLabelAdded }: { feedbackId: string, onLabelAdded: (label: string) => void }) {
   const [state, formAction] = useActionState(addLabelToFeedback, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   
@@ -37,10 +37,11 @@ export function AddLabelPopover({ feedbackId }: { feedbackId: string }) {
   });
 
   useEffect(() => {
-    if (state?.message) {
+    if (state?.message && form.getValues('label')) {
+        onLabelAdded(form.getValues('label'));
         form.reset({ label: '', feedbackId });
     }
-  }, [state, form, feedbackId]);
+  }, [state, form, feedbackId, onLabelAdded]);
 
   return (
     <Popover>
@@ -54,10 +55,15 @@ export function AddLabelPopover({ feedbackId }: { feedbackId: string }) {
             <form 
                 ref={formRef}
                 action={formAction}
-                onSubmit={form.handleSubmit(() => formRef.current?.requestSubmit())}
+                onSubmit={(evt) => {
+                    evt.preventDefault();
+                    form.handleSubmit(() => {
+                        formAction(new FormData(formRef.current!));
+                    })(evt);
+                }}
                 className="flex gap-2"
             >
-                <input type="hidden" name="feedbackId" value={feedbackId} />
+                <input type="hidden" {...form.register('feedbackId')} />
                 <FormField
                     control={form.control}
                     name="label"

@@ -1,6 +1,6 @@
 'use client';
 
-import { projects as initialProjects, feedback as allFeedback } from '@/lib/data';
+import { use } from 'react';
 import { notFound } from 'next/navigation';
 import { FeedbackTable } from '@/components/feedback/feedback-table';
 import { FeedbackWidgetButton } from '@/components/feedback/feedback-widget-button';
@@ -12,48 +12,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { Project, Feedback } from '@/lib/definitions';
-import { useState, use } from 'react';
-
-function getProject(projectId: string, projectQueryParam?: string): Project | undefined {
-  if (projectQueryParam) {
-    try {
-      // URL-decode the string before parsing
-      const decodedParam = decodeURIComponent(projectQueryParam);
-      const p = JSON.parse(decodedParam);
-      if (p.id === projectId && p.name && p.createdAt && p.projectKey) {
-        return {
-          ...p,
-          createdAt: new Date(p.createdAt),
-        };
-      }
-    } catch (e) {
-      console.error("Failed to parse project data from query param:", e);
-    }
-  }
-  return initialProjects.find((p) => p.id === projectId);
-}
+import { useAppContext } from '@/context/app-provider';
 
 export default function ProjectDetailsPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ projectId: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedParams = use(params);
-  const resolvedSearchParams = use(searchParams);
-  const projectQueryParam = resolvedSearchParams.project as string | undefined;
+  const { projects, feedback } = useAppContext();
 
-  const project = getProject(resolvedParams.projectId, projectQueryParam);
-  
-  const [feedback, setFeedback] = useState<Feedback[]>(() => 
-    allFeedback.filter((f) => f.projectId === resolvedParams.projectId)
-  );
-
-  const handleFeedbackSubmitted = (newFeedback: Feedback) => {
-    setFeedback((prevFeedback) => [newFeedback, ...prevFeedback]);
-  };
+  const project = projects.find((p) => p.id === resolvedParams.projectId);
+  const projectFeedback = feedback.filter((f) => f.projectId === resolvedParams.projectId);
 
   if (!project) {
     notFound();
@@ -68,8 +38,6 @@ export default function ProjectDetailsPage({
         </div>
         <FeedbackWidgetButton 
             projectId={project.id} 
-            onFeedbackSubmitted={handleFeedbackSubmitted} 
-            projectData={projectQueryParam}
         />
       </div>
 
@@ -85,7 +53,7 @@ export default function ProjectDetailsPage({
         </CardContent>
       </Card>
 
-      <FeedbackTable initialFeedback={feedback} />
+      <FeedbackTable initialFeedback={projectFeedback} />
     </div>
   );
 }

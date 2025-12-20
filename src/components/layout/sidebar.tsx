@@ -6,7 +6,7 @@ import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Folder } from 'lucide-react';
-import { projects } from '@/lib/data';
+import { useAppContext } from '@/context/app-provider';
 
 const mainNav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -14,6 +14,7 @@ const mainNav = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { projects } = useAppContext();
 
   return (
     <aside className="w-64 flex-shrink-0 border-r bg-card hidden md:flex flex-col">

@@ -21,10 +21,11 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wand2, Loader2, AlertCircle } from 'lucide-react';
+import { Wand2, Loader2 } from 'lucide-react';
 import { getSentimentAnalysis } from '@/lib/actions';
 import { SentimentBadge } from './sentiment-badge';
 import { AddLabelPopover } from './add-label-popover';
+import { useAppContext } from '@/context/app-provider';
 
 const typeIcons = {
   bug: '🐞',
@@ -33,30 +34,24 @@ const typeIcons = {
 };
 
 export function FeedbackTable({ initialFeedback }: { initialFeedback: Feedback[] }) {
-  const [feedbackList, setFeedbackList] = useState<Feedback[]>(initialFeedback);
+  const { updateFeedback, updateLabel } = useAppContext();
   const [filter, setFilter] = useState<FeedbackType | 'all'>('all');
   const [isPending, startTransition] = useTransition();
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
 
   const filteredFeedback = useMemo(() => {
     if (filter === 'all') {
-      return feedbackList;
+      return initialFeedback;
     }
-    return feedbackList.filter((f) => f.type === filter);
-  }, [filter, feedbackList]);
+    return initialFeedback.filter((f) => f.type === filter);
+  }, [filter, initialFeedback]);
 
   const handleAnalyzeSentiment = (feedbackId: string, comment: string) => {
     setAnalyzingId(feedbackId);
     startTransition(async () => {
       const result = await getSentimentAnalysis(feedbackId, comment);
       if (result.sentiment) {
-        setFeedbackList((prev) =>
-          prev.map((f) =>
-            f.id === feedbackId
-              ? { ...f, sentiment: result.sentiment as Sentiment }
-              : f
-          )
-        );
+        updateFeedback(feedbackId, { sentiment: result.sentiment as Sentiment });
       }
       setAnalyzingId(null);
     });
@@ -108,7 +103,7 @@ export function FeedbackTable({ initialFeedback }: { initialFeedback: Feedback[]
                         {item.labels.map((label) => (
                             <Badge key={label} variant="outline">{label}</Badge>
                         ))}
-                        <AddLabelPopover feedbackId={item.id} />
+                        <AddLabelPopover feedbackId={item.id} onLabelAdded={(label) => updateLabel(item.id, label)} />
                     </div>
                   </TableCell>
                   <TableCell>
