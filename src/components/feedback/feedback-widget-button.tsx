@@ -41,6 +41,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const lastResetKey = useRef<string | undefined>(undefined);
 
   const form = useForm<z.infer<typeof feedbackSchema>>({
     resolver: zodResolver(feedbackSchema),
@@ -52,7 +53,8 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
   });
 
   useEffect(() => {
-    if (state.resetKey) {
+    if (state.resetKey && state.resetKey !== lastResetKey.current) {
+        lastResetKey.current = state.resetKey;
         if (state.errors && Object.keys(state.errors).length > 0) {
             toast({ title: 'Error', description: state.message, variant: 'destructive' });
         } else {
@@ -63,8 +65,15 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
     }
   }, [state, toast, form]);
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      form.reset();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <MessageSquarePlus className="mr-2 h-4 w-4" />
