@@ -51,7 +51,7 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
     resolver: zodResolver(projectSchema),
     defaultValues: { name: '' },
   });
-
+  
   useEffect(() => {
     if (state.message && state.resetKey) {
         if (state.errors) {
@@ -68,7 +68,7 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
         }
     }
   }, [state, toast, form, onProjectCreated]);
-  
+
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
