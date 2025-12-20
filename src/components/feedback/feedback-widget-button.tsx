@@ -1,8 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { useEffect, useState, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -32,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const initialState = {
     message: '',
-    errors: {},
+    errors: null,
     resetKey: '',
 };
 
@@ -41,7 +40,6 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const lastResetKey = useRef<string | undefined>(undefined);
 
   const form = useForm<z.infer<typeof feedbackSchema>>({
     resolver: zodResolver(feedbackSchema),
@@ -53,8 +51,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
   });
 
   useEffect(() => {
-    if (state.resetKey && state.resetKey !== lastResetKey.current) {
-        lastResetKey.current = state.resetKey;
+    if (state.resetKey) {
         if (state.errors && Object.keys(state.errors).length > 0) {
             toast({ title: 'Error', description: state.message, variant: 'destructive' });
         } else {

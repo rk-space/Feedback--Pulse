@@ -16,6 +16,8 @@ export async function createProject(prevState: any, formData: FormData) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Missing Fields. Failed to Create Project.',
+      project: null,
+      resetKey: Date.now().toString(),
     };
   }
 
@@ -27,9 +29,9 @@ export async function createProject(prevState: any, formData: FormData) {
     projectKey: `pk_${crypto.randomUUID()}`,
   };
 
-  // Note: In a real app, this would be a database call.
   projects.unshift(newProject);
   revalidatePath('/dashboard');
+  revalidatePath(`/project/${newProject.id}`);
 
   return {
     message: `Project "${name}" created successfully.`,
@@ -50,6 +52,7 @@ export async function submitFeedback(prevState: any, formData: FormData) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Missing Fields. Failed to Submit Feedback.',
+      resetKey: Date.now().toString(),
     };
   }
   
@@ -70,7 +73,7 @@ export async function submitFeedback(prevState: any, formData: FormData) {
 
   return {
     message: 'Feedback submitted successfully!',
-    errors: {},
+    errors: null,
     resetKey: Date.now().toString(),
   };
 }
