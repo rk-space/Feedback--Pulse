@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,12 +21,11 @@ import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
 import { labelSchema } from '@/lib/schemas';
 import { addLabelToFeedback } from '@/lib/actions';
-import { useEffect, useRef } from 'react';
 
 const initialState = { message: '' };
 
 export function AddLabelPopover({ feedbackId }: { feedbackId: string }) {
-  const [state, formAction] = useFormState(addLabelToFeedback, initialState);
+  const [state, formAction] = useActionState(addLabelToFeedback, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   
   const form = useForm<z.infer<typeof labelSchema>>({
