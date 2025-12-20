@@ -1,4 +1,4 @@
-import { projects, feedback as allFeedback } from '@/lib/data';
+import { projects as initialProjects, feedback as allFeedback } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { FeedbackTable } from '@/components/feedback/feedback-table';
 import { FeedbackWidgetButton } from '@/components/feedback/feedback-widget-button';
@@ -10,13 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { Project } from '@/lib/definitions';
+import type { Project, Feedback } from '@/lib/definitions';
+import { useState, useEffect } from 'react';
 
 function getProject(projectId: string, projectQueryParam?: string): Project | undefined {
   if (projectQueryParam) {
     try {
       const p = JSON.parse(projectQueryParam);
-      // Basic validation
       if (p.id === projectId && p.name && p.createdAt && p.projectKey) {
         return {
           ...p,
@@ -24,10 +24,10 @@ function getProject(projectId: string, projectQueryParam?: string): Project | un
         };
       }
     } catch (e) {
-      // Ignore parsing errors
+      // Ignore invalid JSON
     }
   }
-  return projects.find((p) => p.id === projectId);
+  return initialProjects.find((p) => p.id === projectId);
 }
 
 export default function ProjectDetailsPage({
@@ -38,14 +38,18 @@ export default function ProjectDetailsPage({
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
   const project = getProject(params.projectId, searchParams.project as string | undefined);
+  
+  const [feedback, setFeedback] = useState<Feedback[]>(() => 
+    allFeedback.filter((f) => f.projectId === params.projectId)
+  );
+
+  const handleFeedbackSubmitted = (newFeedback: Feedback) => {
+    setFeedback((prevFeedback) => [newFeedback, ...prevFeedback]);
+  };
 
   if (!project) {
     notFound();
   }
-
-  const projectFeedback = allFeedback.filter(
-    (f) => f.projectId === params.projectId
-  );
 
   return (
     <div className="space-y-8">
@@ -54,7 +58,11 @@ export default function ProjectDetailsPage({
           <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
           <p className="text-muted-foreground">Manage feedback for this project.</p>
         </div>
-        <FeedbackWidgetButton projectId={project.id} />
+        <FeedbackWidgetButton 
+            projectId={project.id} 
+            onFeedbackSubmitted={handleFeedbackSubmitted} 
+            projectData={searchParams.project as string | undefined}
+        />
       </div>
 
       <Card>
@@ -69,7 +77,7 @@ export default function ProjectDetailsPage({
         </CardContent>
       </Card>
 
-      <FeedbackTable initialFeedback={projectFeedback} />
+      <FeedbackTable initialFeedback={feedback} />
     </div>
   );
 }

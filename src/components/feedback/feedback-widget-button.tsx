@@ -28,14 +28,33 @@ import { MessageSquarePlus } from 'lucide-react';
 import { feedbackSchema } from '@/lib/schemas';
 import { submitFeedback } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
+import type { Feedback } from '@/lib/definitions';
 
-const initialState = {
-    message: '',
-    errors: null,
-    resetKey: '',
+type SubmitFeedbackState = {
+    message: string;
+    errors?: {
+        type?: string[];
+        comment?: string[];
+        projectId?: string[];
+    } | null;
+    feedback?: Feedback;
+    resetKey?: string;
 };
 
-export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
+const initialState: SubmitFeedbackState = {
+    message: '',
+    errors: null,
+};
+
+export function FeedbackWidgetButton({ 
+    projectId, 
+    onFeedbackSubmitted,
+    projectData 
+}: { 
+    projectId: string, 
+    onFeedbackSubmitted?: (feedback: Feedback) => void,
+    projectData?: string 
+}) {
   const [state, formAction] = useActionState(submitFeedback, initialState);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -58,11 +77,14 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
             toast({ title: 'Error', description: state.message, variant: 'destructive' });
         } else {
             toast({ title: 'Success', description: state.message });
+            if (state.feedback && onFeedbackSubmitted) {
+                onFeedbackSubmitted(state.feedback);
+            }
             setOpen(false);
             form.reset();
         }
     }
-  }, [state, toast, form]);
+  }, [state, toast, form, onFeedbackSubmitted]);
 
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -94,6 +116,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
                 className="space-y-4"
             >
                 <input type="hidden" name="projectId" value={projectId} />
+                {projectData && <input type="hidden" name="projectData" value={projectData} />}
                 <FormField
                     control={form.control}
                     name="type"

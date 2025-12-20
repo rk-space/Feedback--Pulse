@@ -15,7 +15,9 @@ import { feedback } from '@/lib/data';
 
 export function ProjectCard({ project }: { project: Project }) {
   const feedbackCount = feedback.filter(f => f.projectId === project.id).length;
-  const isNew = !project.createdAt.toISOString().startsWith('2023');
+  // A project is considered "new" if it was created just now and doesn't exist in the original hardcoded data.
+  // We can check this by seeing if its creation date doesn't match the predefined ones.
+  const isNew = !['2023-10-26T10:00:00.000Z', '2023-11-15T14:30:00.000Z'].includes(project.createdAt.toISOString());
 
   const projectData = {
     id: project.id,

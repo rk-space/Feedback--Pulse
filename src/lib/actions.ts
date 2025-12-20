@@ -4,8 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { analyzeFeedbackSentiment } from '@/ai/flows/analyze-feedback-sentiment';
 import { projectSchema, feedbackSchema, labelSchema } from '@/lib/schemas';
-import { projects, feedback } from '@/lib/data';
-import type { Project } from './definitions';
+import { projects, feedback as feedbackData } from '@/lib/data';
+import type { Project, Feedback } from './definitions';
 
 export async function createProject(prevState: any, formData: FormData) {
   const validatedFields = projectSchema.safeParse({
@@ -29,10 +29,13 @@ export async function createProject(prevState: any, formData: FormData) {
     projectKey: `pk_${crypto.randomUUID()}`,
   };
 
+  // This adds the project to the in-memory array.
+  // NOTE: In a real application, this would be a database call.
+  // This data will be lost on server restart.
   projects.unshift(newProject);
+  
   revalidatePath('/dashboard');
-  revalidatePath(`/project/${newProject.id}`);
-
+  
   return {
     message: `Project "${name}" created successfully.`,
     errors: null,
@@ -41,11 +44,16 @@ export async function createProject(prevState: any, formData: FormData) {
   };
 }
 
+const feedbackSubmitSchema = feedbackSchema.extend({
+    projectData: z.string().optional(),
+});
+
 export async function submitFeedback(prevState: any, formData: FormData) {
-    const validatedFields = feedbackSchema.safeParse({
+    const validatedFields = feedbackSubmitSchema.safeParse({
       type: formData.get('type'),
       comment: formData.get('comment'),
       projectId: formData.get('projectId'),
+      projectData: formData.get('projectData'),
     });
   
     if (!validatedFields.success) {
@@ -56,9 +64,9 @@ export async function submitFeedback(prevState: any, formData: FormData) {
       };
     }
     
-    const { type, comment, projectId } = validatedFields.data;
+    const { type, comment, projectId, projectData } = validatedFields.data;
   
-    const newFeedback = {
+    const newFeedback: Feedback = {
       id: `fb_${Date.now()}`,
       projectId,
       type,
@@ -68,12 +76,20 @@ export async function submitFeedback(prevState: any, formData: FormData) {
       sentiment: null,
     };
   
-    feedback.unshift(newFeedback);
-    revalidatePath(`/project/${projectId}`);
+    feedbackData.unshift(newFeedback);
+    
+    // If projectData is passed, it means we are on a "new" project page.
+    // We need to revalidate with the project query param.
+    const revalidationPath = projectData
+      ? `/project/${projectId}?project=${encodeURIComponent(projectData)}`
+      : `/project/${projectId}`;
+
+    revalidatePath(revalidationPath);
   
     return {
       message: 'Feedback submitted successfully!',
       errors: null,
+      feedback: newFeedback,
       resetKey: Date.now().toString(),
     };
   }
@@ -82,7 +98,7 @@ export async function getSentimentAnalysis(feedbackId: string, text: string) {
   try {
     const result = await analyzeFeedbackSentiment({ feedbackText: text });
     
-    const feedbackItem = feedback.find(f => f.id === feedbackId);
+    const feedbackItem = feedbackData.find(f => f.id === feedbackId);
     if (feedbackItem) {
       feedbackItem.sentiment = result.sentiment as 'positive' | 'negative' | 'neutral';
       revalidatePath(`/project/${feedbackItem.projectId}`);
@@ -106,7 +122,7 @@ export async function addLabelToFeedback(prevState: any, formData: FormData) {
     }
     
     const { label, feedbackId } = validatedFields.data;
-    const feedbackItem = feedback.find(f => f.id === feedbackId);
+    const feedbackItem = feedbackData.find(f => f.id === feedbackId);
 
     if (feedbackItem && !feedbackItem.labels.includes(label)) {
         feedbackItem.labels.push(label);
