@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { Project, Feedback } from '@/lib/definitions';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 
 function getProject(projectId: string, projectQueryParam?: string): Project | undefined {
   if (projectQueryParam) {
@@ -38,13 +38,14 @@ export default function ProjectDetailsPage({
   params,
   searchParams,
 }: {
-  params: { projectId: string };
+  params: Promise<{ projectId: string }>;
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const project = getProject(params.projectId, searchParams.project as string | undefined);
+  const resolvedParams = use(params);
+  const project = getProject(resolvedParams.projectId, searchParams.project as string | undefined);
   
   const [feedback, setFeedback] = useState<Feedback[]>(() => 
-    allFeedback.filter((f) => f.projectId === params.projectId)
+    allFeedback.filter((f) => f.projectId === resolvedParams.projectId)
   );
 
   const handleFeedbackSubmitted = (newFeedback: Feedback) => {
