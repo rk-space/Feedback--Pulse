@@ -93,7 +93,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
                 action={formAction}
                 className="space-y-4"
             >
-                <input type="hidden" {...form.register('projectId')} value={projectId} />
+                <input type="hidden" name="projectId" value={projectId} />
                 <FormField
                     control={form.control}
                     name="type"
@@ -105,6 +105,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                             className="flex flex-col space-y-1"
+                            name={field.name}
                             >
                             <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl>
