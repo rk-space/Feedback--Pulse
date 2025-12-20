@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useEffect, useState, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,7 +37,7 @@ const initialState = {
 };
 
 export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
-  const [state, formAction] = useFormState(submitFeedback, initialState);
+  const [state, formAction] = useActionState(submitFeedback, initialState);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
