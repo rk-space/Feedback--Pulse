@@ -18,7 +18,9 @@ import { useState, useEffect } from 'react';
 function getProject(projectId: string, projectQueryParam?: string): Project | undefined {
   if (projectQueryParam) {
     try {
-      const p = JSON.parse(projectQueryParam);
+      // URL-decode the string before parsing
+      const decodedParam = decodeURIComponent(projectQueryParam);
+      const p = JSON.parse(decodedParam);
       if (p.id === projectId && p.name && p.createdAt && p.projectKey) {
         return {
           ...p,
@@ -26,7 +28,7 @@ function getProject(projectId: string, projectQueryParam?: string): Project | un
         };
       }
     } catch (e) {
-      // Ignore invalid JSON
+      console.error("Failed to parse project data from query param:", e);
     }
   }
   return initialProjects.find((p) => p.id === projectId);
