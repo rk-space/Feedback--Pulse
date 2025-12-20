@@ -51,7 +51,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
   });
 
   useEffect(() => {
-    if (state.message) {
+    if (state.message && state.resetKey) {
       if (state.errors && Object.keys(state.errors).length > 0) {
         toast({ title: 'Error', description: state.message, variant: 'destructive' });
       } else {
