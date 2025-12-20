@@ -24,7 +24,6 @@ export const projectSchema = z.object({
 });
 
 export const feedbackSchema = z.object({
-    projectId: z.string(),
     type: z.enum(['bug', 'feature', 'other'], {
         required_error: 'You need to select a feedback type.',
     }),

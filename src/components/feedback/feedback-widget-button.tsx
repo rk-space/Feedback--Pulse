@@ -36,22 +36,24 @@ const initialState = {
 };
 
 export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
-  const [state, formAction] = useActionState(submitFeedback, initialState);
+  const submitFeedbackWithProjectId = submitFeedback.bind(null, projectId);
+  const [state, formAction] = useActionState(submitFeedbackWithProjectId, initialState);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const lastResetKey = useRef<string | undefined>(undefined);
 
   const form = useForm<z.infer<typeof feedbackSchema>>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
-      projectId,
       type: 'feature',
       comment: '',
     },
   });
 
   useEffect(() => {
-    if (state.resetKey) {
+    if (state.resetKey && state.resetKey !== lastResetKey.current) {
+        lastResetKey.current = state.resetKey;
         if (state.errors && Object.keys(state.errors).length > 0) {
             toast({ title: 'Error', description: state.message, variant: 'destructive' });
         } else {
@@ -90,7 +92,6 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
                 action={formAction}
                 className="space-y-4"
             >
-                <input type="hidden" name="projectId" value={projectId} />
                 <FormField
                     control={form.control}
                     name="type"
