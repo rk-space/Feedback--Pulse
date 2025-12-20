@@ -1,3 +1,5 @@
+'use client';
+
 import { projects as initialProjects, feedback as allFeedback } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { FeedbackTable } from '@/components/feedback/feedback-table';
