@@ -54,7 +54,7 @@ export function AddLabelPopover({ feedbackId }: { feedbackId: string }) {
             <form 
                 ref={formRef}
                 action={formAction}
-                onSubmit={form.handleSubmit(() => formRef.current?.submit())}
+                onSubmit={form.handleSubmit(() => formRef.current?.requestSubmit())}
                 className="flex gap-2"
             >
                 <input type="hidden" name="feedbackId" value={feedbackId} />

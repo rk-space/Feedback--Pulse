@@ -80,7 +80,7 @@ export function CreateProjectDialog() {
             ref={formRef}
             action={formAction}
             className="space-y-4"
-            onSubmit={form.handleSubmit(() => formRef.current?.submit())}
+            onSubmit={form.handleSubmit(() => formRef.current?.requestSubmit())}
           >
             <FormField
               control={form.control}
