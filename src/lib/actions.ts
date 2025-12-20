@@ -11,7 +11,15 @@ import type { Project, Feedback } from './definitions';
 const tempProjects: Project[] = [];
 const tempFeedback: Feedback[] = [];
 
-export async function createProject(prevState: any, formData: FormData) {
+type CreateProjectState = {
+  message?: string | null;
+  errors?: {
+    name?: string[];
+  } | null;
+  project?: Project | null;
+}
+
+export async function createProject(prevState: CreateProjectState | null, formData: FormData): Promise<CreateProjectState> {
   const validatedFields = projectSchema.safeParse({
     name: formData.get('name'),
   });
@@ -44,7 +52,17 @@ export async function createProject(prevState: any, formData: FormData) {
   };
 }
 
-export async function submitFeedback(prevState: any, formData: FormData) {
+type SubmitFeedbackState = {
+    message: string;
+    errors?: {
+        type?: string[];
+        comment?: string[];
+        projectId?: string[];
+    } | null;
+    feedback?: Feedback;
+};
+
+export async function submitFeedback(prevState: SubmitFeedbackState | null, formData: FormData): Promise<SubmitFeedbackState> {
     const validatedFields = feedbackSchema.safeParse({
       type: formData.get('type'),
       comment: formData.get('comment'),
@@ -91,7 +109,9 @@ export async function getSentimentAnalysis(feedbackId: string, text: string) {
   }
 }
 
-export async function addLabelToFeedback(prevState: any, formData: FormData) {
+type AddLabelState = { message: string };
+
+export async function addLabelToFeedback(prevState: AddLabelState, formData: FormData): Promise<AddLabelState> {
     const validatedFields = labelSchema.safeParse({
         label: formData.get('label'),
         feedbackId: formData.get('feedbackId'),
@@ -104,6 +124,10 @@ export async function addLabelToFeedback(prevState: any, formData: FormData) {
     const { label, feedbackId } = validatedFields.data;
 
     // In a real app, you would update the feedback item in your database.
+    const feedbackItem = tempFeedback.find(f => f.id === feedbackId);
+    if (feedbackItem && !feedbackItem.labels.includes(label)) {
+        feedbackItem.labels.push(label);
+    }
     
     revalidatePath(`/project/`);
 

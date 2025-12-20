@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useRef } from 'react';
+import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -28,30 +28,12 @@ import { MessageSquarePlus } from 'lucide-react';
 import { feedbackSchema } from '@/lib/schemas';
 import { submitFeedback } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
-import type { Feedback } from '@/lib/definitions';
 import { useAppContext } from '@/context/app-provider';
 
-type SubmitFeedbackState = {
-    message: string;
-    errors?: {
-        type?: string[];
-        comment?: string[];
-        projectId?: string[];
-    } | null;
-    feedback?: Feedback;
-};
-
-const initialState: SubmitFeedbackState = {
-    message: '',
-    errors: null,
-};
-
 export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
-  const [state, formAction] = useActionState(submitFeedback, initialState);
   const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const formRef = useRef<HTMLFormElement>(null);
-  
   const { addFeedback } = useAppContext();
 
   const form = useForm<z.infer<typeof feedbackSchema>>({
@@ -62,27 +44,32 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
       projectId: projectId,
     },
   });
-
-  useEffect(() => {
-    if (state.message) {
-      if (state.errors) {
-        toast({ title: 'Error', description: state.message, variant: 'destructive' });
-      } else if (state.feedback) {
-        toast({ title: 'Success', description: state.message });
-        addFeedback(state.feedback);
-        setOpen(false);
-        form.reset();
-      }
-    }
-  }, [state, toast, form, addFeedback]);
-
-
+  
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
       form.reset();
-      // Reset action state if dialog is closed
     }
+  };
+
+  const onSubmit = (values: z.infer<typeof feedbackSchema>) => {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append('type', values.type);
+      formData.append('comment', values.comment);
+      formData.append('projectId', values.projectId);
+
+      const result = await submitFeedback(null, formData);
+
+      if (result.errors) {
+        toast({ title: 'Error', description: result.message, variant: 'destructive' });
+      } else if (result.feedback) {
+        toast({ title: 'Success', description: result.message });
+        addFeedback(result.feedback);
+        setOpen(false);
+        form.reset();
+      }
+    });
   };
 
   return (
@@ -102,12 +89,9 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
         </DialogHeader>
         <Form {...form}>
             <form 
-                ref={formRef}
-                action={formAction}
+                onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
-                onSubmit={form.handleSubmit(() => formRef.current?.requestSubmit())}
             >
-                <input type="hidden" {...form.register('projectId')} value={projectId} />
                 <FormField
                     control={form.control}
                     name="type"
@@ -163,8 +147,8 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
                     )}
                 />
                 <DialogFooter>
-                    <Button type="submit" disabled={form.formState.isSubmitting}>
-                        Submit Feedback
+                    <Button type="submit" disabled={isPending}>
+                        {isPending ? 'Submitting...' : 'Submit Feedback'}
                     </Button>
                 </DialogFooter>
             </form>
