@@ -15,7 +15,7 @@ export function Logo({ className }: { className?: string }) {
             <path d="M9 4.5V12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12V4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M12 2V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-      <span className="text-xl font-bold text-foreground">PulseTrack</span>
+      <span className="text-xl font-bold text-foreground">FeedbackPulse</span>
     </div>
   );
 }

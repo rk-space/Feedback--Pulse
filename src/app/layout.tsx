@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'PulseTrack',
+  title: 'FeedbackPulse',
   description: 'Collect and analyze user feedback with ease.',
 };
 
