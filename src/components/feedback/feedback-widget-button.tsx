@@ -36,8 +36,7 @@ const initialState = {
 };
 
 export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
-  const submitFeedbackWithProjectId = submitFeedback.bind(null, projectId);
-  const [state, formAction] = useActionState(submitFeedbackWithProjectId, initialState);
+  const [state, formAction] = useActionState(submitFeedback, initialState);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -47,6 +46,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
     defaultValues: {
       type: 'feature',
       comment: '',
+      projectId: projectId,
     },
   });
 
@@ -91,6 +91,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
                 action={formAction}
                 className="space-y-4"
             >
+                 <input type="hidden" name="projectId" value={projectId} />
                 <FormField
                     control={form.control}
                     name="type"

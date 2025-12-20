@@ -41,41 +41,42 @@ export async function createProject(prevState: any, formData: FormData) {
   };
 }
 
-export async function submitFeedback(projectId: string, prevState: any, formData: FormData) {
-  const validatedFields = feedbackSchema.safeParse({
-    type: formData.get('type'),
-    comment: formData.get('comment'),
-  });
-
-  if (!validatedFields.success) {
+export async function submitFeedback(prevState: any, formData: FormData) {
+    const validatedFields = feedbackSchema.safeParse({
+      type: formData.get('type'),
+      comment: formData.get('comment'),
+      projectId: formData.get('projectId'),
+    });
+  
+    if (!validatedFields.success) {
+      return {
+        errors: validatedFields.error.flatten().fieldErrors,
+        message: 'Missing Fields. Failed to Submit Feedback.',
+        resetKey: Date.now().toString(),
+      };
+    }
+    
+    const { type, comment, projectId } = validatedFields.data;
+  
+    const newFeedback = {
+      id: `fb_${Date.now()}`,
+      projectId,
+      type,
+      comment,
+      createdAt: new Date(),
+      labels: [],
+      sentiment: null,
+    };
+  
+    feedback.unshift(newFeedback);
+    revalidatePath(`/project/${projectId}`);
+  
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing Fields. Failed to Submit Feedback.',
+      message: 'Feedback submitted successfully!',
+      errors: null,
       resetKey: Date.now().toString(),
     };
   }
-  
-  const { type, comment } = validatedFields.data;
-
-  const newFeedback = {
-    id: `fb_${Date.now()}`,
-    projectId,
-    type,
-    comment,
-    createdAt: new Date(),
-    labels: [],
-    sentiment: null,
-  };
-
-  feedback.unshift(newFeedback);
-  revalidatePath(`/project/${projectId}`);
-
-  return {
-    message: 'Feedback submitted successfully!',
-    errors: null,
-    resetKey: Date.now().toString(),
-  };
-}
 
 export async function getSentimentAnalysis(feedbackId: string, text: string) {
   try {

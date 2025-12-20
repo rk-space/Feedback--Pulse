@@ -28,6 +28,7 @@ export const feedbackSchema = z.object({
         required_error: 'You need to select a feedback type.',
     }),
     comment: z.string().min(10, { message: 'Comment must be at least 10 characters.' }),
+    projectId: z.string(),
 });
 
 export const labelSchema = z.object({
