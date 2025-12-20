@@ -41,8 +41,7 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const lastResetKey = useRef<string | undefined>(undefined);
-
+  
   const form = useForm<z.infer<typeof feedbackSchema>>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
@@ -52,17 +51,17 @@ export function FeedbackWidgetButton({ projectId }: { projectId: string }) {
   });
 
   useEffect(() => {
-    if (state.resetKey && state.resetKey !== lastResetKey.current) {
-        lastResetKey.current = state.resetKey;
-        if (state.errors && Object.keys(state.errors).length > 0) {
-            toast({ title: 'Error', description: state.message, variant: 'destructive' });
-        } else {
-            toast({ title: 'Success', description: state.message });
-            setOpen(false);
-            form.reset();
-        }
+    if (state.message) {
+      if (state.errors && Object.keys(state.errors).length > 0) {
+        toast({ title: 'Error', description: state.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Success', description: state.message });
+        setOpen(false);
+        form.reset();
+      }
     }
   }, [state, toast, form]);
+
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
