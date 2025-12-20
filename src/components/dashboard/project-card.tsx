@@ -15,6 +15,14 @@ import { feedback } from '@/lib/data';
 
 export function ProjectCard({ project }: { project: Project }) {
   const feedbackCount = feedback.filter(f => f.projectId === project.id).length;
+  const isNew = !project.createdAt.toISOString().startsWith('2023');
+
+  const projectData = {
+    id: project.id,
+    name: project.name,
+    createdAt: project.createdAt.toISOString(),
+    projectKey: project.projectKey,
+  };
 
   return (
     <Card>
@@ -32,7 +40,14 @@ export function ProjectCard({ project }: { project: Project }) {
       </CardContent>
       <CardFooter>
         <Button asChild className="w-full">
-          <Link href={`/project/${project.id}`}>View Feedback</Link>
+          <Link 
+            href={{
+              pathname: `/project/${project.id}`,
+              query: isNew ? { project: JSON.stringify(projectData) } : {},
+            }}
+          >
+            View Feedback
+          </Link>
         </Button>
       </CardFooter>
     </Card>
