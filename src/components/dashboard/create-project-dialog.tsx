@@ -96,12 +96,6 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
             ref={formRef}
             action={formAction}
             className="space-y-4"
-            onSubmit={(evt) => {
-                evt.preventDefault();
-                form.handleSubmit(() => {
-                    formAction(new FormData(formRef.current!));
-                })(evt);
-            }}
           >
             <FormField
               control={form.control}
