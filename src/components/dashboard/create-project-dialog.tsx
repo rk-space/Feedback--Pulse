@@ -31,7 +31,7 @@ import type { Project } from '@/lib/definitions';
 
 type CreateProjectState = {
   message: string;
-  errors: { name?: string[] } | null;
+  errors?: { name?: string[] } | null;
   project?: Project;
   resetKey?: string;
 };
@@ -53,29 +53,31 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
   });
 
   useEffect(() => {
-    if (state.resetKey) {
-        if (state.message && !state.errors && state.project) {
-            toast({ title: 'Success', description: state.message });
-            onProjectCreated(state.project);
-            setOpen(false);
-            form.reset();
-        } else if (state.message && state.errors) {
+    if (state.message && state.resetKey) {
+        if (state.errors) {
             toast({
                 title: 'Error',
                 description: state.message,
                 variant: 'destructive',
             });
+        } else if (state.project) {
+            toast({ title: 'Success', description: state.message });
+            onProjectCreated(state.project);
+            setOpen(false);
+            form.reset();
         }
     }
   }, [state, toast, form, onProjectCreated]);
+  
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+        form.reset();
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) {
-            form.reset();
-        }
-    }}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="-ml-1 mr-2 h-4 w-4" />
@@ -94,7 +96,12 @@ export function CreateProjectDialog({ onProjectCreated }: { onProjectCreated: (p
             ref={formRef}
             action={formAction}
             className="space-y-4"
-            onSubmit={form.handleSubmit(() => formRef.current?.requestSubmit())}
+            onSubmit={(evt) => {
+                evt.preventDefault();
+                form.handleSubmit(() => {
+                    formAction(new FormData(formRef.current!));
+                })(evt);
+            }}
           >
             <FormField
               control={form.control}

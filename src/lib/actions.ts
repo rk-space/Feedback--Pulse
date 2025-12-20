@@ -28,7 +28,6 @@ export async function createProject(prevState: any, formData: FormData) {
   };
 
   // Note: In a real app, this would be a database call.
-  // For this mock data, we're returning the project to be added on the client.
   projects.unshift(newProject);
   revalidatePath('/dashboard');
 
